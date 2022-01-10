@@ -14,6 +14,7 @@ class Application(tk.Tk):
         self.title(self.name)
 
         self.bind("<Escape>", self.quit) #propojuje udalost s nejakou akci, zmackneme esc - program quitne
+        self.protocol('WM_DELETE_WINDOW', self.quit)
 
         #R
         self.frameR = tk.Frame(self)
@@ -75,6 +76,8 @@ class Application(tk.Tk):
                 canvas.grid(row=row, column=column)
                 canvas.bind('<Button-1>', self.mousehandler)
                 self.canvasMem.append(canvas)
+            
+        self.colorLoad()
 
     def mousehandler(self, event):
         if self.cget('cursor') != 'pencil':
@@ -83,6 +86,10 @@ class Application(tk.Tk):
         elif self.cget('cursor') == 'pencil':
             self.config(cursor='')
             event.widget.config(background=self.color)
+
+            if event.widget is self.canvasMain:
+                self.canvasColor2Slids(self.canvasMain)
+
 
     def change(self, var, index, mode):
         
@@ -97,8 +104,32 @@ class Application(tk.Tk):
         self.varG.set(g)
         self.varB.set(b)
 
+    def canvasColor2Slids(self, canvas):
+        color = canvas.cget('background')
+        r = int(color[1:3], 16)
+        g = int(color[3:5], 16)
+        b = int(color[5:7], 16)
+        self.varR.set(r)
+        self.varG.set(g)
+        self.varB.set(b)
+
+    def colorSave(self):
+        with open('colors.txt', 'w') as f:
+            f.write(self.canvasMain.cget('background') + '\n')
+            for canvas in self.canvasMem:
+                f.write(canvas.cget('background') + '\n')
+
+    def colorLoad(self):
+        with open('colors.txt', 'r') as f:
+            colorcode = f.readline().strip()
+            self.canvasMain.config(background=colorcode)
+            self.canvasColor2Slids(self.canvasMain)
+            for canvas in self.canvasMem:
+                colorcode = f.readline().strip()
+                canvas.config(background=colorcode)
 
     def quit(self, event=None):
+        self.colorSave()
         super().quit()
 
 
